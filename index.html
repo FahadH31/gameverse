@@ -16,8 +16,17 @@
                 <a href="checkout.html">Checkout</a>
             </div>
             
+            <div class="search-bar-container" id="searchContainer">
+                <input type="text" placeholder="Search games, gears, or categories..." class="search-input" id="searchInput">
+            </div>
 
             <div class="nav-icons">
+                <button class="icon-btn search-btn" id="searchToggle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
                 <button class="icon-btn cart-btn" onclick="window.location.href='checkout.html'">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="9" cy="21" r="1"></circle>
@@ -26,7 +35,7 @@
                     </svg>
                     <span class="cart-count" id="navCartCount"></span>
                 </button>
-                <button class="icon-btn profile-btn" onclick="window.location.href='signup.html'">
+                <button class="icon-btn profile-btn">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
@@ -199,6 +208,19 @@
         </div>
     </footer>
 
+    <div id="toastContainer"></div>
+
+    <div id="logoutModal">
+        <div class="logout-content">
+            <h3>Confirm Logout</h3>
+            <p id="logoutMessage">Are you sure you want to log out?</p>
+            <div class="logout-actions">
+                <button class="logout-btn-cancel" id="logoutCancelBtn">Cancel</button>
+                <button class="logout-btn-confirm" id="logoutConfirmBtn">Logout</button>
+            </div>
+        </div>
+    </div>
+    
     <script src="script.js"></script>
 </body>
 </html>

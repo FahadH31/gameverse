@@ -2,7 +2,7 @@
 let cart = JSON.parse(localStorage.getItem('gameverse_cart')) || [];
 let allProducts = []; // Store all products for filtering
 
-// --- AUTHENTICATION LOGIC (Retained from previous turn) ---
+// --- AUTHENTICATION LOGIC ---
 
 function saveUsers(users) {
     localStorage.setItem('gameverse_users', JSON.stringify(users));
@@ -43,6 +43,85 @@ function logoutUser() {
     window.location.href = 'index.html'; // Redirect to home after logout
 }
 
+// --- UTILITY UI FUNCTIONS (NEW) ---
+
+/**
+ * Displays a non-blocking toast notification.
+ * @param {string} message The message to display.
+ * @param {('success'|'error'|'info')} type The type of notification.
+ */
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        console.error('Toast container not found. Falling back to alert.');
+        alert(message);
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    // Show the toast
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10); // Small delay for CSS transition to work
+
+    // Hide and remove the toast
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            container.removeChild(toast);
+        }, 500); // Wait for transition
+    }, 4000);
+}
+
+/**
+ * Shows the custom logout confirmation modal.
+ * @param {string} email The user email for display.
+ */
+function showLogoutModal(email) {
+    const modal = document.getElementById('logoutModal');
+    const messageEl = document.getElementById('logoutMessage');
+    const confirmBtn = document.getElementById('logoutConfirmBtn');
+    const cancelBtn = document.getElementById('logoutCancelBtn');
+
+    if (!modal) {
+         // Fallback to old confirm for this one case if modal is missing
+         if (confirm(`Logged in as: ${email}. Do you want to log out?`)) {
+             logoutUser();
+         }
+         return;
+    }
+    
+    messageEl.textContent = `Are you sure you want to log out from ${email}?`;
+    modal.classList.add('active');
+
+    const handleConfirm = () => {
+        modal.classList.remove('active');
+        logoutUser();
+        // Remove listeners to prevent memory leaks/multiple calls
+        confirmBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+    };
+
+    const handleCancel = () => {
+        modal.classList.remove('active');
+        // Remove listeners
+        confirmBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+    };
+
+    // Remove any existing listeners before adding new ones
+    confirmBtn.onclick = null;
+    cancelBtn.onclick = null;
+    
+    confirmBtn.addEventListener('click', handleConfirm);
+    cancelBtn.addEventListener('click', handleCancel);
+}
+
+// Update the user status check to use the new modal
 function checkUserStatus() {
     const currentUser = getCurrentUser();
     const profileButton = document.querySelector('.profile-btn');
@@ -50,11 +129,9 @@ function checkUserStatus() {
     
     if (profileButton) {
         if (currentUser) {
-            // User is logged in: Change button action to prompt for logout
+            // User is logged in: Change button action to show custom modal
             profileButton.onclick = () => {
-                if (confirm(`Logged in as: ${currentUser}. Do you want to log out?`)) {
-                    logoutUser();
-                }
+                showLogoutModal(currentUser);
             };
             
             // Visual cue: Change icon color to green
@@ -73,6 +150,7 @@ function checkUserStatus() {
         }
     }
 }
+
 
 // --- PRODUCT DISPLAY, FILTERING, AND SEARCH LOGIC ---
 
@@ -247,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- AUTH FORM SUBMISSIONS (Retained from previous turn) ---
+    // --- AUTH FORM SUBMISSIONS ---
 
     // Signup form logic
     const signupForm = document.getElementById('signupForm');
@@ -258,16 +336,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('signupPassword').value.trim();
             
             if (!email || !password) {
-                alert('Please enter both email and password.');
+                showToast('Please enter both email and password.', 'error');
                 return;
             }
 
             const result = signupUser(email, password);
             if (result.success) {
-                alert(result.message);
+                showToast(result.message, 'success');
                 window.location.href = 'login.html';
             } else {
-                alert(result.message);
+                showToast(result.message, 'error');
             }
         });
     }
@@ -281,20 +359,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('loginPassword').value.trim();
 
             if (!email || !password) {
-                alert('Please enter both email and password.');
+                showToast('Please enter both email and password.', 'error');
                 return;
             }
 
             if (loginUser(email, password)) {
-                alert('Login successful!');
+                showToast('Login successful! Welcome back.', 'success');
                 window.location.href = 'index.html'; // Redirect to home on successful login
             } else {
-                alert('Login failed. Check your email and password.');
+                showToast('Login failed. Check your email and password.', 'error');
             }
         });
     }
     
-    // --- SEARCH TOGGLE & INPUT LOGIC (NEW) ---
+    // --- SEARCH TOGGLE & INPUT LOGIC ---
     const searchToggle = document.getElementById('searchToggle');
     const searchContainer = document.getElementById('searchContainer');
     const searchInput = document.getElementById('searchInput');
@@ -342,6 +420,7 @@ function addToCart(item) {
     
     saveCart();
     updateCartCount();
+    showToast(`${item.product} added to cart!`, 'success');
 }
 
 // Remove item from cart
@@ -351,6 +430,7 @@ function removeFromCart(productName) {
     updateCartCount();
     renderCart();
     updateOrderSummary();
+    showToast(`${productName} removed from cart.`, 'info');
 }
 
 // Update item quantity
@@ -383,7 +463,7 @@ function updateCartCount() {
     });
 }
 
-// Render cart items
+// Render cart items (function body remains the same)
 function renderCart() {
     const cartList = document.getElementById('cartList');
     const sidebarCartItems = document.getElementById('sidebarCartItems');
@@ -439,7 +519,7 @@ function renderCart() {
     }
 }
 
-// Update order summary
+// Update order summary (function body remains the same)
 function updateOrderSummary() {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
     const tax = subtotal * 0.09; // 9% tax
@@ -482,7 +562,7 @@ function updateOrderSummary() {
     });
 }
 
-// Update shipping cost - called when delivery option is changed
+// Update shipping cost (function body remains the same)
 function updateShipping(deliveryType) {
     const shippingElements = document.querySelectorAll('#shipping, #summaryShipping');
     
@@ -519,18 +599,15 @@ function updateShipping(deliveryType) {
 // Continue to delivery
 function continueToDelivery() {
     if (cart.length === 0) {
-        alert('Your cart is empty! Add some items first.');
+        showToast('Your cart is empty! Add some items first.', 'info');
         return;
     }
     
     // Require login to continue checkout
     if (!getCurrentUser()) {
-        const confirmLogin = confirm("You need to log in or sign up to continue checkout. Redirect to login?");
-        if (confirmLogin) {
-             window.location.href = 'login.html';
-             return;
-        }
-        return; // Stop if not logged in and user cancels redirect
+        showToast("You need to log in or sign up to continue checkout.", 'info');
+        // Do not redirect, let the user click the profile/login link
+        return;
     }
 
     document.getElementById('cartSection').style.display = 'none';
@@ -570,7 +647,7 @@ function continueToPayment() {
     });
     
     if (!isValid) {
-        alert('Please fill in all required fields correctly');
+        showToast('Please fill in all required fields correctly', 'error');
         return;
     }
     
@@ -589,7 +666,7 @@ function continueToPayment() {
     window.scrollTo(0, 0);
 }
 
-// Go back to delivery
+// Go back to delivery (function body remains the same)
 function goToDelivery() {
     document.getElementById('paymentSection').style.display = 'none';
     document.getElementById('deliverySection').style.display = 'block';
@@ -614,7 +691,7 @@ function completePurchase() {
     const cvv = document.querySelector('.payment-form input[placeholder="123"]').value;
 
     if (cardNumber.length < 19 || expiryDate.length < 5 || cvv.length < 3) {
-        alert('Please enter valid payment details.');
+        showToast('Please enter valid payment details.', 'error');
         return;
     }
     
@@ -627,7 +704,7 @@ function completePurchase() {
     document.getElementById('successModal').style.display = 'flex';
 }
 
-// Smooth scroll for CTA buttons
+// Smooth scroll for CTA buttons (function body remains the same)
 document.querySelectorAll('.cta-button').forEach(button => {
     button.addEventListener('click', (e) => {
         if (button.textContent.includes('Explore')) {
