@@ -320,7 +320,8 @@ function setupFiltering() {
         element: card,
         title: card.querySelector('.product-title').textContent.toLowerCase(),
         category: card.querySelector('.product-category').textContent.toLowerCase(),
-        price: parseFloat(card.querySelector('.product-price').textContent.replace(`'`, ''))
+        // FIX: Correctly remove the '$' symbol before parsing the price.
+        price: parseFloat(card.querySelector('.product-price').textContent.replace('$', ''))
     }));
     
     // Get filter elements
