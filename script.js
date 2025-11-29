@@ -43,7 +43,7 @@ function logoutUser() {
     window.location.href = 'index.html'; // Redirect to home after logout
 }
 
-// --- UTILITY UI FUNCTIONS (NEW) ---
+// --- UTILITY UI FUNCTIONS ---
 
 /**
  * Displays a non-blocking toast notification.
@@ -149,22 +149,6 @@ function checkUserStatus() {
             }
         }
     }
-}
-
-// Function to format card number input (optional but nice UX)
-function formatCardNumber(input) {
-    let value = input.value.replace(/\s/g, ''); // Remove spaces
-    let formattedValue = value.replace(/(\d{4})/g, '$1 ').trim(); // Add space every 4 digits
-    input.value = formattedValue.substring(0, 19);
-}
-
-// Function to format expiry date input (optional but nice UX)
-function formatExpiryDate(input) {
-    let value = input.value.replace(/\s|\//g, ''); // Remove spaces and slashes
-    if (value.length > 2) {
-        value = value.substring(0, 2) + '/' + value.substring(2);
-    }
-    input.value = value.substring(0, 5);
 }
 
 
@@ -288,6 +272,22 @@ function setupFiltering() {
     }
 }
 
+// Function to format card number input (optional but nice UX)
+function formatCardNumber(input) {
+    let value = input.value.replace(/\s/g, ''); // Remove spaces
+    let formattedValue = value.replace(/(\d{4})/g, '$1 ').trim(); // Add space every 4 digits
+    input.value = formattedValue.substring(0, 19);
+}
+
+// Function to format expiry date input (optional but nice UX)
+function formatExpiryDate(input) {
+    let value = input.value.replace(/\s|\//g, ''); // Remove spaces and slashes
+    if (value.length > 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2);
+    }
+    input.value = value.substring(0, 5);
+}
+
 
 // --- DOM MANIPULATION AND EVENT LISTENERS ---
 
@@ -296,14 +296,21 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
     checkUserStatus(); // Check and update user status on all pages
     
-    // If on checkout page, render cart
-    if (window.location.pathname.includes('checkout.html')) {
+    // Define pathname once for robust checks on deployment (FIXED)
+    const pathname = window.location.pathname;
+    
+    // If on checkout page, render cart (FIXED PATH CHECK)
+    const isCheckoutPage = pathname.includes('checkout.html') || pathname.endsWith('/checkout/') || pathname.endsWith('/checkout');
+
+    if (isCheckoutPage) {
         renderCart();
         updateOrderSummary();
     }
     
-    // If on games page, setup filtering
-    if (window.location.pathname.includes('games.html')) {
+    // If on games page, setup filtering (FIXED PATH CHECK)
+    const isGamesPage = pathname.includes('games.html') || pathname.endsWith('/games/') || pathname.endsWith('/games');
+
+    if (isGamesPage) {
         setupFiltering();
     }
     
@@ -387,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
+    
     // --- PAYMENT INPUT FORMATTING ---
     const cardNumberInput = document.getElementById('cardNumber');
     if (cardNumberInput) {
@@ -414,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Clear search and re-run display logic when closing
                 searchInput.value = '';
                 // Only run updateProductDisplay if we are on a page that supports filtering (games.html)
-                if (window.location.pathname.includes('games.html')) {
+                if (isGamesPage) {
                     updateProductDisplay(); 
                 }
             }
@@ -426,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchContainer.classList.remove('active');
                 searchInput.value = '';
                 // Only run updateProductDisplay if on games.html
-                if (window.location.pathname.includes('games.html')) {
+                if (isGamesPage) {
                     updateProductDisplay(); 
                 }
             }
@@ -710,7 +717,6 @@ function goToDelivery() {
     window.scrollTo(0, 0);
 }
 
-// Complete purchase
 // Complete purchase (UPDATED WITH DUMMY PAYMENT LOGIC)
 function completePurchase() {
     // Dummy valid payment details for prototype
@@ -750,15 +756,15 @@ function completePurchase() {
         showToast(`Payment Failed. Use dummy card: 1111 2222 3333 4444 (Exp: 12/26, CVV: 123)`, 'error');
         
         // Optional: Highlight fields with errors
-        cardNumberInput.style.borderColor = '#ef4444';
-        expiryDateInput.style.borderColor = '#ef4444';
-        cvvInput.style.borderColor = '#ef4444';
+        if (cardNumberInput) cardNumberInput.style.borderColor = '#ef4444';
+        if (expiryDateInput) expiryDateInput.style.borderColor = '#ef4444';
+        if (cvvInput) cvvInput.style.borderColor = '#ef4444';
         
         // Reset border colors after a delay
         setTimeout(() => {
-            cardNumberInput.style.borderColor = 'var(--border-color)';
-            expiryDateInput.style.borderColor = 'var(--border-color)';
-            cvvInput.style.borderColor = 'var(--border-color)';
+            if (cardNumberInput) cardNumberInput.style.borderColor = 'var(--border-color)';
+            if (expiryDateInput) expiryDateInput.style.borderColor = 'var(--border-color)';
+            if (cvvInput) cvvInput.style.borderColor = 'var(--border-color)';
         }, 3000);
     }
 }
